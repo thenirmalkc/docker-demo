@@ -1,0 +1,41 @@
+version: "3.8"
+
+networks:
+  local:
+    name: local
+    driver: bridge
+    external: true
+
+volumes:
+  redis-v:
+    name: redis-v
+    external: true
+
+services:
+  redis-c:
+    container_name: redis-c
+    image: redis:7-alpine
+    networks:
+      - local
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-v:/data
+    command: ["redis-server", "--requirepass", "root"]
+
+  demo-c:
+    container_name: demo-c
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    networks:
+      - local
+    ports:
+      - 3000:3000
+    environment:
+      PORT: 3000
+      REDIS_HOST: redis-c
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: root
+    depends_on:
+      - redis-c
